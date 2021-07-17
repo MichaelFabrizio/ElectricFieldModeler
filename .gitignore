@@ -37,3 +37,9 @@ obj/Debug/Renderer.obj
 *.exe
 imgui.ini
 *.enc
+*.vcxproj
+*.filters
+*.sln
+*.bat
+extern/
+External Code Files/
