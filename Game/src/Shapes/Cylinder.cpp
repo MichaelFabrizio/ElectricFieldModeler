@@ -19,9 +19,10 @@ int Cylinder::Integrate()
 
 bool Cylinder::CheckPointForOccupation(int i, int j, int k, float scale)
 {
-	float xAdjusted = cos(theta_) * (cos(phi_) * (float)((i - x)/scale) + sin(phi_) * (float)((j - y)/scale)) - (float)((k - z)/scale) * sin(theta_);
-	float yAdjusted = -sin(phi_) * (float)((i - x) / scale) + cos(phi_) * (float)((j - y) / scale);
-	float zAdjusted = sin(theta_) * (cos(phi_) * (float)((i - x) / scale) + sin(phi_) * (float)((j - y) / scale)) + (float)((k - z) / scale) * cos(theta_);
+	//Almost positive these explicit casts can be optimized. Or at least handled in a more graceful way.
+	float xAdjusted = cos(theta_) * (cos(phi_) * ((float)i / scale - x) + sin(phi_) * ((float)j / scale - y)) - ((float)k / scale - z) * sin(theta_);
+	float yAdjusted = -sin(phi_) * ((float)i / scale - x) + cos(phi_) * ((float)j / scale - y);
+	float zAdjusted = sin(theta_) * (cos(phi_) * ((float)i / scale - x) + sin(phi_) * ((float)j / scale - y)) + ((float)k / scale - z) * cos(theta_);
 
 	double xSquared = pow(xAdjusted, 2.0);
 	double ySquared = pow(yAdjusted, 2.0);

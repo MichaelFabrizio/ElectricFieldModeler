@@ -3,6 +3,7 @@
 #include "ObjectSelectionMenu.h"
 #include "MCIntegrator.h"
 #include "Laplacian.h"
+#include "ParticleWindow.h"
 
 #include <SDL.h>
 #include <Glad.h>
@@ -13,15 +14,19 @@
 #include <thread>
 
 Core::Core() : _isRunning(true), _window(nullptr), _glContext(NULL), renderer(nullptr), contentManager_(nullptr), io_(nullptr),
-calculateClicked_(false), laplacian(nullptr), gridxbuf_{ "" }, gridybuf_{ "" }, gridzbuf_{ "" }, gridscalebuf_{ "" }, iterationbuf_{ "" }
+calculateClicked_(false), gridxbuf_{ "" }, gridybuf_{ "" }, gridzbuf_{ "" }, gridscalebuf_{ "" }, iterationbuf_{ "" }, isCalculating_(false)
 {
 	serializer_ = new SerializationManager();
+	laplacian = new Laplacian();
+	particleWindow_ = new ParticleWindow(*laplacian);
 }
 
 Core::~Core()
 {
 	delete renderer;
 	delete serializer_;
+	delete particleWindow_;
+	delete laplacian;
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
@@ -73,24 +78,23 @@ void Core::Init()
 
 void Core::Run()
 {
-	bool show_demo_window = false;
+	bool show_demo_window = true;
 	ObjectSelectionMenu menu;
 
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	ImVec4 clear_color = ImVec4(0.9f, 0.9f, 0.9f, 1.00f);
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	while (_isRunning)
 	{
-		//Created on the stack I think
+		//Created on the stack I think (Answer: Yes. And if otherwise, SDL Event handles its own memory)
 		SDL_Event evnt;
 
-		while (SDL_PollEvent(&evnt))
+		while (SDL_PollEvent(&evnt) && !isCalculating_)
 		{
 			ImGui_ImplSDL2_ProcessEvent(&evnt);
 			switch (evnt.type)
 			{
 			case SDL_QUIT:
-				//SDL_Quit(); Causes bugs with ImGui if SDL is quit this early in the loop
 				_isRunning = false;
 				break;
 			}
@@ -105,10 +109,18 @@ void Core::Run()
 		if (show_demo_window)
 			ImGui::ShowDemoWindow(&show_demo_window);
 
+		//This is just window management code. Like dimensions/location
 		menu.GenerateWindow();
+
+		//This 
 		menu.Process();
 		menu.EmptyList(listToAdd_);
 		objectList_.insert(objectList_.end(), std::make_move_iterator(listToAdd_.begin()), std::make_move_iterator(listToAdd_.end()));
+		listToAdd_.clear();
+
+		menu.EmptyDetectors(listToAdd_);
+		detectionList_.insert(detectionList_.end(), std::make_move_iterator(listToAdd_.begin()), std::make_move_iterator(listToAdd_.end()));
+		listToAdd_.clear();
 
 		const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(ImVec2(main_viewport->Size.x - 300-300, 0), ImGuiCond_FirstUseEver);
@@ -117,12 +129,18 @@ void Core::Run()
 		for (size_t i = 0; i < objectList_.size(); i++)
 		{
 			ImGui::Text((*objectList_[i]).name); ImGui::SameLine();
-			ImGui::SmallButton("Select"); ImGui::SameLine();
-			if (ImGui::SmallButton("Delete"))
+			//ImGui::SmallButton("Select"); ImGui::SameLine();
+
+			//Creates a bunch of buttons with unique id's. Should really only be creating these labels once and then caching them
+			std::string buttonID = "Delete##";
+			buttonID += std::to_string(i);
+			const char* buttonIDChar = buttonID.c_str();
+			if (ImGui::SmallButton(buttonIDChar))
 			{
 				pendingDeletion_.push_back(i);
 			}
 		}
+
 		ImGui::End();
 
 		ImGui::SetNextWindowPos(ImVec2(main_viewport->Size.x - 300 - 100, 200), ImGuiCond_FirstUseEver);
@@ -133,12 +151,24 @@ void Core::Run()
 		ImGui::Begin("Calculate", NULL, windowflags);
 		if (ImGui::Button("Calculate"))
 		{
-			laplacian = new Laplacian(atoi(iterationbuf_), atoi(gridxbuf_), atoi(gridybuf_), atoi(gridzbuf_), (float)atof(gridscalebuf_));
-			laplacian->Calculate(objectList_);
-			//laplacian->DebugPrint();
-			laplacian->ExportCSV();
-			delete laplacian;
+			isCalculating_ = true;
+			//This makes sure the grid wasn't already constructed. But we can fix this too.
+			//TODO: Make grid deleteable. Make a new Laplacian generatable
+			if (!calculateClicked_)
+			{
+				calculateClicked_ = true;
+				bool successful = laplacian->BuildGrid(atoi(iterationbuf_), atoi(gridxbuf_), atoi(gridybuf_), atoi(gridzbuf_), atof(gridscalebuf_));
+				laplacian->successful = successful;
+
+				if (successful)
+				{
+					laplacian->Calculate(objectList_);
+					laplacian->ExportCSV();
+				}
+			}
+			isCalculating_ = false;
 		}
+
 		ImGui::End();
 
 		ImGui::SetNextWindowPos(ImVec2(main_viewport->Size.x - 300 - 300 - 350, 0), ImGuiCond_FirstUseEver);
@@ -152,6 +182,7 @@ void Core::Run()
 		ImGui::End();
 
 		serializer_->BuildWindow(*main_viewport, objectList_);
+		particleWindow_->BuildWindow(*main_viewport, detectionList_);
 
 		// Rendering
 		ImGui::Render();

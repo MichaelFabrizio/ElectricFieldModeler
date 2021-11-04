@@ -4,6 +4,7 @@
 #include "Shapes/Shape.h"
 #include "Laplacian.h"
 #include "SerializationManager.h"
+#include "ParticleWindow.h"
 #include <SDL.h>
 #include <imgui.h>
 #include <vector>
@@ -24,15 +25,18 @@ public:
 	ContentManager* contentManager_;
 private:
 	bool _isRunning;
+	bool isCalculating_;
 	SDL_Window* _window;
 	SDL_GLContext _glContext;
 	ImGuiIO* io_;
 	std::vector<std::unique_ptr<Shape>> objectList_;
 	std::vector<std::unique_ptr<Shape>> listToAdd_;
+	std::vector<std::unique_ptr<Shape>> detectionList_;
 	std::vector<int> pendingDeletion_;
 	bool calculateClicked_;
 	Laplacian* laplacian;
 	SerializationManager* serializer_;
+	ParticleWindow* particleWindow_;
 
 	char gridxbuf_[16];
 	char gridybuf_[16];

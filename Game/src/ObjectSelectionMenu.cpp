@@ -49,8 +49,17 @@ void ObjectSelectionMenu::Process()
 		{
 			Cylinder cylinder = cylinderMenu->GenerateObject();
 			std::unique_ptr<Cylinder> ptr = std::make_unique<Cylinder>(cylinder);
-			pendingShapes.push_back(std::move(ptr));
-			cylinderMenu->ResetObject();
+
+			if (cylinderMenu->detectionCyl_)
+			{
+				pendingDetectors.push_back(std::move(ptr));
+				cylinderMenu->ResetObject();
+			}
+			else
+			{
+				pendingShapes.push_back(std::move(ptr));
+				cylinderMenu->ResetObject();
+			}
 		}
 		break;
 	case 1:
@@ -92,4 +101,10 @@ void ObjectSelectionMenu::EmptyList(std::vector<std::unique_ptr<Shape>>& ListToA
 {
 	ListToAdd = std::move(pendingShapes);
 	pendingShapes.clear();
+}
+
+void ObjectSelectionMenu::EmptyDetectors(std::vector<std::unique_ptr<Shape>>& ListToAdd)
+{
+	ListToAdd = std::move(pendingDetectors);
+	pendingDetectors.clear();
 }

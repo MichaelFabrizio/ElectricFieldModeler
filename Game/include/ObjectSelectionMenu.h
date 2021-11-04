@@ -17,6 +17,7 @@ public:
 	void GenerateWindow();
 	void Process();
 	void EmptyList(std::vector<std::unique_ptr<Shape>>& vector);
+	void EmptyDetectors(std::vector<std::unique_ptr<Shape>>& vector);
 
 private:
 	CylinderParameterMenu* cylinderMenu;
@@ -29,4 +30,5 @@ private:
 	float height;
 
 	std::vector<std::unique_ptr<Shape>> pendingShapes;
+	std::vector<std::unique_ptr<Shape>> pendingDetectors;
 };

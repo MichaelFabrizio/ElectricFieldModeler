@@ -17,7 +17,7 @@ SerializationManager::SerializationManager() : filebuf_{ "" }, savefilebuf_{ "" 
 
 void SerializationManager::BuildWindow(const ImGuiViewport& viewport, std::vector<std::unique_ptr<Shape>>& objectList)
 {
-	ImGui::SetNextWindowPos(ImVec2(0, viewport.Size.y - 150), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(0, viewport.Size.y - 390), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(300, 150), ImGuiCond_FirstUseEver);
 
 	int windowflags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;

@@ -11,10 +11,14 @@ public:
 
 	int shapeType;
 	char name[32];
-	float x;
-	float y;
-	float z;
-	float voltage;
+	double x;
+	double y;
+	double z;
+	double voltage;
+
+	//Obsolete - Nonfunctional
 	virtual int Integrate() = 0;
+
+
 	virtual bool CheckPointForOccupation(int i, int j, int k, float scale) = 0;
 };
