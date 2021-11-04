@@ -1,3 +1,3 @@
-# SelfStudy
+# Electric Field Modeler
 
-Well here you have it. Not much to be said.
+A program built to model the electric field resulting in closed systems with voltage biases applied.
